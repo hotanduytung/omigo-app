@@ -1,0 +1,34 @@
+# Flutter/Dart helper files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbol lookup folders
+.symbolic_links/
+
+# Obfuscation map
+app.*.symbols
+
+# Android Studio will pack this folder into apk if it exists
+/android/app/src/main/assets/flutter_shared_assets_dev
+
+# Editor directories and files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.metadata
+
+# macOS files
+.DS_Store
+
+# Custom screenshots or logs
+*.png
+*.jpg
+*.jpeg
+*.log
