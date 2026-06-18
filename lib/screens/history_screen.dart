@@ -45,8 +45,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final list = await ApiService.fetchCustomerTrips(
         state.currentCustomer!.phoneNumber,
       );
+      list.sort((a, b) =>
+          b.requestedDepartureTime.compareTo(a.requestedDepartureTime));
       setState(() {
-        _recentTrips = list.reversed.toList();
+        _recentTrips = list;
         _isLoading = false;
       });
     } catch (e) {
@@ -59,59 +61,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  void _rebookRide(TripRequest trip, AppState state) async {
-    final lang = state.language;
-    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-        .format(DateTime.now().add(const Duration(hours: 2)));
-
-    final newReq = TripRequest(
-      userName: trip.userName,
-      phoneNumber: trip.phoneNumber,
-      pickupSpecificPoint: trip.pickupSpecificPoint,
-      dropoffSpecificPoint: trip.dropoffSpecificPoint,
-      requestedSeatCount: trip.requestedSeatCount,
-      origin: trip.origin,
-      destination: trip.destination,
-      requestedDepartureTime: formattedTime,
-      source: 'app',
-      bookingSource: 'web',
-      serviceType: trip.serviceType,
-      createdByType: 'user',
-      appliedFixedPrice: trip.appliedFixedPrice,
-      status: 'new',
-      matchedTripConfigId: trip.matchedTripConfigId,
+  void _rebookRide(TripRequest trip, AppState state) {
+    state.setPrefillBooking(
+      trip.pickupSpecificPoint,
+      trip.dropoffSpecificPoint,
+      trip.serviceType,
     );
-
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang == 'vi' ? 'Đang đặt lại chuyến...' : 'Rebooking ride...',
-          ),
-        ),
-      );
-      final created = await ApiService.createTripRequest(newReq);
-      state.setActiveTrip(created);
-      state.setSelectedTabIndex(0);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang == 'vi'
-                ? 'Đã đặt lại thành công!'
-                : 'Rebooked successfully!',
-          ),
-          backgroundColor: AppColors.brandGreen,
-        ),
-      );
-      _loadHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lang == 'vi' ? 'Lỗi: $e' : 'Error: $e'),
-          backgroundColor: AppColors.brandError,
-        ),
-      );
-    }
+    state.setSelectedTabIndex(0); // Go to Home tab
   }
 
   @override
@@ -138,7 +94,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             // Custom Mockup-style Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl, AppSpacing.sm, AppSpacing.md, AppSpacing.xs),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -156,15 +113,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.refresh_rounded, size: 22, color: AppColors.steel_(isDark)),
-                        onPressed: _loadHistory,
-                        tooltip: lang == 'vi' ? 'Làm mới' : 'Refresh',
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.history_rounded, size: 22, color: AppColors.steel_(isDark)),
+                        icon: Icon(Icons.history_rounded,
+                            size: 22, color: AppColors.steel_(isDark)),
                         onPressed: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const FullHistoryScreen()),
+                            MaterialPageRoute(
+                                builder: (_) => const FullHistoryScreen()),
                           );
                         },
                         tooltip: lang == 'vi' ? 'Lịch sử' : 'History',
@@ -176,7 +130,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             _buildSegmentControl(isDark, lang),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xl, vertical: AppSpacing.sm),
               child: Text(
                 lang == 'vi' ? 'Gần đây' : 'Recent',
                 style: TextStyle(
@@ -193,17 +148,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 color: AppColors.brandGreen,
                 child: _isLoading
                     ? const Center(
-                        child: CircularProgressIndicator(color: AppColors.brandGreen),
+                        child: CircularProgressIndicator(
+                            color: AppColors.brandGreen),
                       )
                     : _errorMsg.isNotEmpty
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
-                              SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                              SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.2),
                               Center(
                                 child: Text(
                                   _errorMsg,
-                                  style: AppText.bodySm.copyWith(color: AppColors.brandError),
+                                  style: AppText.bodySm
+                                      .copyWith(color: AppColors.brandError),
                                 ),
                               ),
                             ],
@@ -212,13 +171,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ? ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 children: [
-                                  SizedBox(height: MediaQuery.of(context).size.height * 0.1),
+                                  SizedBox(
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.1),
                                   _buildEmptyState(isDark, lang, state),
                                 ],
                               )
                             : ListView.builder(
                                 physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.xs),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.xl,
+                                    vertical: AppSpacing.xs),
                                 itemCount: displayTrips.length,
                                 itemBuilder: (context, index) {
                                   final trip = displayTrips[index];
@@ -234,27 +198,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           s != 'canceled';
                                       if (isActive) {
                                         state.setActiveTrip(trip);
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => const TrackingScreen(),
-                                          ),
-                                        ).then((_) => _loadHistory());
+                                        Navigator.of(context)
+                                            .push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const TrackingScreen(),
+                                              ),
+                                            )
+                                            .then((_) => _loadHistory());
                                       } else {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (_) => BookingDetailsScreen(trip: trip),
-                                          ),
-                                        ).then((_) => _loadHistory());
+                                        Navigator.of(context)
+                                            .push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    BookingDetailsScreen(
+                                                        trip: trip),
+                                              ),
+                                            )
+                                            .then((_) => _loadHistory());
                                       }
                                     },
                                     onRebook: () => _rebookRide(trip, state),
-                                    onRate: trip.status.toLowerCase() == 'completed'
-                                        ? () => Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => BookingDetailsScreen(trip: trip),
-                                              ),
-                                            ).then((_) => _loadHistory())
-                                        : null,
+                                    onRate:
+                                        trip.status.toLowerCase() == 'completed'
+                                            ? () => Navigator.of(context)
+                                                .push(
+                                                  MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        BookingDetailsScreen(
+                                                            trip: trip),
+                                                  ),
+                                                )
+                                                .then((_) => _loadHistory())
+                                            : null,
                                   );
                                 },
                               ),
@@ -268,7 +244,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildSegmentControl(bool isDark, String lang) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl, vertical: AppSpacing.md),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.surfaceSoft,
@@ -281,8 +258,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Row(
         children: [
           _buildSegmentTab('all', lang == 'vi' ? 'Tất cả' : 'All', isDark),
-          _buildSegmentTab('rides', lang == 'vi' ? 'Chuyến đi' : 'Rides', isDark),
-          _buildSegmentTab('cargo', lang == 'vi' ? 'Đơn hàng' : 'Orders', isDark),
+          _buildSegmentTab(
+              'rides', lang == 'vi' ? 'Chuyến đi' : 'Rides', isDark),
+          _buildSegmentTab(
+              'cargo', lang == 'vi' ? 'Đơn hàng' : 'Orders', isDark),
         ],
       ),
     );
@@ -416,7 +395,8 @@ class _TripCard extends StatelessWidget {
       statusColor = const Color(0xFF8B5CF6); // Purple
     } else if (s == 'completed') {
       statusLabel = isVi ? 'Đã hoàn thành' : 'Completed';
-      statusColor = isDark ? AppColors.brandGreen : const Color(0xFF10B981); // Green
+      statusColor =
+          isDark ? AppColors.brandGreen : const Color(0xFF10B981); // Green
     } else if (s == 'canceled') {
       statusLabel = isVi ? 'Đã hủy' : 'Canceled';
       statusColor = AppColors.brandError; // Red
@@ -429,10 +409,15 @@ class _TripCard extends StatelessWidget {
     final isCompleted = s == 'completed';
     final isCanceled = s == 'canceled';
 
-    final pickupText = trip.pickupSpecificPoint.isNotEmpty ? trip.pickupSpecificPoint : trip.origin;
-    final dropoffText = trip.dropoffSpecificPoint.isNotEmpty ? trip.dropoffSpecificPoint : trip.destination;
+    final pickupText = trip.pickupSpecificPoint.isNotEmpty
+        ? trip.pickupSpecificPoint
+        : trip.origin;
+    final dropoffText = trip.dropoffSpecificPoint.isNotEmpty
+        ? trip.dropoffSpecificPoint
+        : trip.destination;
     final routeText = '$pickupText → $dropoffText';
-    final dateText = '${trip.requestedDepartureTime.split(' ').first}  ·  ${svc.label}';
+    final dateText =
+        '${trip.requestedDepartureTime.split(' ').first}  ·  ${svc.label}';
     final priceText = fmt.format(trip.appliedFixedPrice);
 
     return GestureDetector(
@@ -464,10 +449,21 @@ class _TripCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.surfaceCode : AppColors.surfaceSoft,
+                    color:
+                        isDark ? AppColors.surfaceCode : AppColors.surfaceSoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(svc.icon, size: 20, color: AppColors.brandGreenDeep),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Image.asset(
+                      trip.serviceType == 'bao-xe'
+                          ? 'assets/images/3d_car_premium_black.png'
+                          : (trip.serviceType == 'gui-hang'
+                              ? 'assets/images/3d_box_red.png'
+                              : 'assets/images/3d_car_yellow.png'),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -508,39 +504,74 @@ class _TripCard extends StatelessWidget {
             ),
 
             // CTA Button if needed
-            if (isCanceled || (isCompleted && onRate != null)) ...[
+            if (isCanceled || isCompleted) ...[
               const SizedBox(height: 12),
-              GestureDetector(
-                onTap: isCanceled ? onRebook : onRate,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      isCanceled
-                          ? (isVi ? 'Đặt lại' : 'Rebook')
-                          : (isVi ? 'Đánh giá' : 'Rate'),
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.brandGreenDeep,
+              Row(
+                children: [
+                  if (isCompleted && onRate != null) ...[
+                    GestureDetector(
+                      onTap: onRate,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isVi ? 'Đánh giá' : 'Rate',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.brandGreenDeep,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              color: AppColors.brandGreenDeep,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.star_rounded,
+                              size: 8,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppColors.brandGreenDeep,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 8,
-                        color: Colors.white,
-                      ),
-                    ),
+                    const SizedBox(width: 16),
                   ],
-                ),
+                  GestureDetector(
+                    onTap: onRebook,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isVi ? 'Đặt lại' : 'Rebook',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.brandGreenDeep,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(
+                            color: AppColors.brandGreenDeep,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.refresh_rounded,
+                            size: 8,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ],

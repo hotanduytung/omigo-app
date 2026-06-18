@@ -18,49 +18,14 @@ class BookingDetailsScreen extends StatefulWidget {
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   bool _isRebooking = false;
 
-  void _rebookRide(AppState state) async {
-    setState(() => _isRebooking = true);
-    final lang = state.language;
-    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-        .format(DateTime.now().add(const Duration(hours: 2)));
-
-    final newReq = TripRequest(
-      userName: widget.trip.userName,
-      phoneNumber: widget.trip.phoneNumber,
-      pickupSpecificPoint: widget.trip.pickupSpecificPoint,
-      dropoffSpecificPoint: widget.trip.dropoffSpecificPoint,
-      requestedSeatCount: widget.trip.requestedSeatCount,
-      origin: widget.trip.origin,
-      destination: widget.trip.destination,
-      requestedDepartureTime: formattedTime,
-      source: 'app',
-      bookingSource: 'web',
-      serviceType: widget.trip.serviceType,
-      createdByType: 'user',
-      appliedFixedPrice: widget.trip.appliedFixedPrice,
-      status: 'new',
-      matchedTripConfigId: widget.trip.matchedTripConfigId,
+  void _rebookRide(AppState state) {
+    state.setPrefillBooking(
+      widget.trip.pickupSpecificPoint,
+      widget.trip.dropoffSpecificPoint,
+      widget.trip.serviceType,
     );
-
-    try {
-      final created = await ApiService.createTripRequest(newReq);
-      state.setActiveTrip(created);
-      state.setSelectedTabIndex(0);
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-          lang == 'vi' ? 'Đã đặt lại thành công!' : 'Rebooked successfully!',
-        ),
-        backgroundColor: AppColors.brandGreen,
-      ));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(lang == 'vi' ? 'Lỗi: $e' : 'Error: $e'),
-        backgroundColor: AppColors.brandError,
-      ));
-    } finally {
-      if (mounted) setState(() => _isRebooking = false);
-    }
+    state.setSelectedTabIndex(0); // Go to Home tab
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   void _showRatingSheet(AppState state) {
@@ -91,7 +56,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             children: [
               // Handle bar
               Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                 decoration: BoxDecoration(
                   color: AppColors.hairline_(isDark),
@@ -99,7 +65,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 ),
               ),
               Text(
-                state.language == 'vi' ? 'Đánh giá chuyến đi' : 'Rate your ride',
+                state.language == 'vi'
+                    ? 'Đánh giá chuyến đi'
+                    : 'Rate your ride',
                 style: AppText.heading5.copyWith(color: AppColors.ink_(isDark)),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -108,20 +76,27 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     ? 'Ý kiến của bạn giúp chúng tôi cải thiện dịch vụ'
                     : 'Your feedback helps us improve',
                 textAlign: TextAlign.center,
-                style: AppText.caption.copyWith(color: AppColors.stone_(isDark)),
+                style:
+                    AppText.caption.copyWith(color: AppColors.stone_(isDark)),
               ),
               const SizedBox(height: AppSpacing.xl),
               // Star rating
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) => IconButton(
-                  icon: Icon(
-                    i < rating ? Icons.star_rounded : Icons.star_border_rounded,
-                    size: 44,
-                    color: i < rating ? AppColors.brandGreen : AppColors.hairline_(isDark),
-                  ),
-                  onPressed: () => setModalState(() => rating = i + 1),
-                )),
+                children: List.generate(
+                    5,
+                    (i) => IconButton(
+                          icon: Icon(
+                            i < rating
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
+                            size: 44,
+                            color: i < rating
+                                ? AppColors.brandGreen
+                                : AppColors.hairline_(isDark),
+                          ),
+                          onPressed: () => setModalState(() => rating = i + 1),
+                        )),
               ),
               const SizedBox(height: AppSpacing.md),
               TextField(
@@ -151,7 +126,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   },
                   child: Text(
                     state.language == 'vi' ? 'Gửi đánh giá' : 'Submit Review',
-                    style: AppText.buttonMd.copyWith(fontWeight: FontWeight.w600),
+                    style:
+                        AppText.buttonMd.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -174,15 +150,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final sLabel = statusLabel(widget.trip.status, lang);
 
     // Driver
-    final driverName = widget.trip.assignedDriverName
-        ?? (lang == 'vi' ? 'Nguyễn Văn Hùng' : 'Hung Nguyen');
+    final driverName = widget.trip.assignedDriverName ??
+        (lang == 'vi' ? 'Nguyễn Văn Hùng' : 'Hung Nguyen');
     final hasDriver = ['assigned', 'on_trip', 'completed']
         .contains(widget.trip.status.toLowerCase());
     final isCompleted = widget.trip.status.toLowerCase() == 'completed';
 
     // Prices
-    final double base  = widget.trip.appliedFixedPrice;
-    final double tax   = base * 0.10;
+    final double base = widget.trip.appliedFixedPrice;
+    final double tax = base * 0.10;
     final double total = base + tax;
 
     // Booking ID
@@ -218,11 +194,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // ── Booking ID card ────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.sm,
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
               ),
               decoration: cardDecoration(isDark),
               child: Row(
@@ -249,7 +225,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   const Spacer(),
                   // Service badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceSoft,
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -261,7 +238,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         const SizedBox(width: 4),
                         Text(
                           svc.label,
-                          style: AppText.captionBold.copyWith(color: AppColors.steel),
+                          style: AppText.captionBold
+                              .copyWith(color: AppColors.steel),
                         ),
                       ],
                     ),
@@ -269,7 +247,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   const SizedBox(width: AppSpacing.xs),
                   // Copy button — circular icon button
                   Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       border: Border.all(color: AppColors.hairline_(isDark)),
                       borderRadius: BorderRadius.circular(AppRadius.full),
@@ -277,7 +256,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     child: IconButton(
                       padding: EdgeInsets.zero,
                       icon: Icon(
-                        Icons.copy_rounded, size: 14,
+                        Icons.copy_rounded,
+                        size: 14,
                         color: AppColors.steel_(isDark),
                       ),
                       onPressed: () {
@@ -315,14 +295,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     children: [
                       const SizedBox(height: 3),
                       Container(
-                        width: 10, height: 10,
+                        width: 10,
+                        height: 10,
                         decoration: BoxDecoration(
                           color: AppColors.brandGreen,
                           shape: BoxShape.circle,
                         ),
                       ),
                       Container(
-                        width: 1.5, height: 36,
+                        width: 1.5,
+                        height: 36,
                         color: AppColors.hairline_(isDark),
                       ),
                       Icon(Icons.location_on_rounded,
@@ -439,7 +421,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       children: [
                         CircleAvatar(
                           radius: 22,
-                          backgroundColor: AppColors.brandGreen.withOpacity(0.12),
+                          backgroundColor:
+                              AppColors.brandGreen.withOpacity(0.12),
                           child: Text(
                             driverName.substring(0, 1).toUpperCase(),
                             style: AppText.heading5.copyWith(
@@ -478,10 +461,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         // License plate — code-inline badge
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm, vertical: 4,
+                            horizontal: AppSpacing.sm,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.surfaceCode : AppColors.ink,
+                            color:
+                                isDark ? AppColors.surfaceCode : AppColors.ink,
                             borderRadius: BorderRadius.circular(AppRadius.xs),
                           ),
                           child: Text(
@@ -527,7 +512,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 onTap: () => _showRatingSheet(state),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md, vertical: AppSpacing.sm,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.brandGreen.withOpacity(0.06),
@@ -659,25 +645,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 // Rebook — {button-accent-green} mint pill
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _isRebooking ? null : () => _rebookRide(state),
+                    onPressed: () => _rebookRide(state),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.brandGreen,
                       foregroundColor: AppColors.ink,
                     ),
-                    child: _isRebooking
-                        ? const SizedBox(
-                            width: 18, height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.ink,
-                            ),
-                          )
-                        : Text(
-                            lang == 'vi' ? 'Đặt lại chuyến' : 'Rebook Ride',
-                            style: AppText.buttonMd.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                    child: Text(
+                      lang == 'vi' ? 'Đặt lại chuyến' : 'Rebook Ride',
+                      style: AppText.buttonMd.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],

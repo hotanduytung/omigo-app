@@ -40,8 +40,10 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
       final list = await ApiService.fetchCustomerTrips(
         state.currentCustomer!.phoneNumber,
       );
+      list.sort((a, b) =>
+          b.requestedDepartureTime.compareTo(a.requestedDepartureTime));
       setState(() {
-        _allTrips = list.reversed.toList();
+        _allTrips = list;
         _isLoading = false;
       });
     } catch (e) {
@@ -54,59 +56,14 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
     }
   }
 
-  void _rebookRide(TripRequest trip, AppState state) async {
-    final lang = state.language;
-    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-        .format(DateTime.now().add(const Duration(hours: 2)));
-
-    final newReq = TripRequest(
-      userName: trip.userName,
-      phoneNumber: trip.phoneNumber,
-      pickupSpecificPoint: trip.pickupSpecificPoint,
-      dropoffSpecificPoint: trip.dropoffSpecificPoint,
-      requestedSeatCount: trip.requestedSeatCount,
-      origin: trip.origin,
-      destination: trip.destination,
-      requestedDepartureTime: formattedTime,
-      source: 'app',
-      bookingSource: 'web',
-      serviceType: trip.serviceType,
-      createdByType: 'user',
-      appliedFixedPrice: trip.appliedFixedPrice,
-      status: 'new',
-      matchedTripConfigId: trip.matchedTripConfigId,
+  void _rebookRide(TripRequest trip, AppState state) {
+    state.setPrefillBooking(
+      trip.pickupSpecificPoint,
+      trip.dropoffSpecificPoint,
+      trip.serviceType,
     );
-
-    try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang == 'vi' ? 'Đang đặt lại chuyến...' : 'Rebooking ride...',
-          ),
-        ),
-      );
-      final created = await ApiService.createTripRequest(newReq);
-      state.setActiveTrip(created);
-      state.setSelectedTabIndex(0);
-      Navigator.of(context).popUntil((route) => route.isFirst);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            lang == 'vi'
-                ? 'Đã đặt lại thành công!'
-                : 'Rebooked successfully!',
-          ),
-          backgroundColor: AppColors.brandGreen,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lang == 'vi' ? 'Lỗi: $e' : 'Error: $e'),
-          backgroundColor: AppColors.brandError,
-        ),
-      );
-    }
+    state.setSelectedTabIndex(0); // Go to Home tab
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   @override
@@ -192,27 +149,34 @@ class _FullHistoryScreenState extends State<FullHistoryScreen> {
                                   s != 'canceled';
                               if (isActive) {
                                 state.setActiveTrip(trip);
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const TrackingScreen(),
-                                  ),
-                                ).then((_) => _loadAllTrips());
+                                Navigator.of(context)
+                                    .push(
+                                      MaterialPageRoute(
+                                        builder: (_) => const TrackingScreen(),
+                                      ),
+                                    )
+                                    .then((_) => _loadAllTrips());
                               } else {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => BookingDetailsScreen(trip: trip),
-                                  ),
-                                ).then((_) => _loadAllTrips());
-                              }
-                            },
-                            onRebook: () => _rebookRide(trip, state),
-                            onRate: trip.status.toLowerCase() == 'completed'
-                                ? () => Navigator.of(context).push(
+                                Navigator.of(context)
+                                    .push(
                                       MaterialPageRoute(
                                         builder: (_) =>
                                             BookingDetailsScreen(trip: trip),
                                       ),
-                                    ).then((_) => _loadAllTrips())
+                                    )
+                                    .then((_) => _loadAllTrips());
+                              }
+                            },
+                            onRebook: () => _rebookRide(trip, state),
+                            onRate: trip.status.toLowerCase() == 'completed'
+                                ? () => Navigator.of(context)
+                                    .push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            BookingDetailsScreen(trip: trip),
+                                      ),
+                                    )
+                                    .then((_) => _loadAllTrips())
                                 : null,
                           );
                         },

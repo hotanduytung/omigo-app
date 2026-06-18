@@ -10,16 +10,20 @@ class ApiService {
   static String baseUrl = 'http://localhost:3001/v1/public';
 
   /// Performs Customer Login
-  static Future<Customer> loginCustomer(String phoneNumber, {String? name}) async {
+  static Future<Customer> loginCustomer(String phoneNumber,
+      {String? name, String? email}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/customers/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'phoneNumber': phoneNumber,
-          'name': name ?? 'Khách hàng mới',
-        }),
-      ).timeout(const Duration(seconds: 4));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/customers/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'phoneNumber': phoneNumber,
+              'name': name ?? 'Khách hàng mới',
+              'email': email ?? '',
+            }),
+          )
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -30,8 +34,10 @@ class ApiService {
     } catch (_) {
       // Graceful fallback to mock customer data if server is offline
       return Customer(
-        name: name != null && name.trim().isNotEmpty ? name : 'Khách hàng (Mock)',
+        name:
+            name != null && name.trim().isNotEmpty ? name : 'Khách hàng (Mock)',
         phoneNumber: phoneNumber,
+        email: email ?? '',
       );
     }
   }
@@ -39,7 +45,9 @@ class ApiService {
   /// Lists available configurations (routes and timeslots)
   static Future<List<TripConfig>> fetchTripConfigs() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/trip-configs')).timeout(const Duration(seconds: 4));
+      final response = await http
+          .get(Uri.parse('$baseUrl/trip-configs'))
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -61,12 +69,36 @@ class ApiService {
           destination: 'Đà Nẵng',
           status: 'active',
           timeSlots: [
-            TripTimeSlot(departureTime: '05:00', arrivalTime: '06:15', fixedPrice: 90000, status: 'active'),
-            TripTimeSlot(departureTime: '07:00', arrivalTime: '08:15', fixedPrice: 90000, status: 'active'),
-            TripTimeSlot(departureTime: '09:00', arrivalTime: '10:15', fixedPrice: 90004, status: 'active'),
-            TripTimeSlot(departureTime: '12:00', arrivalTime: '13:15', fixedPrice: 90004, status: 'active'),
-            TripTimeSlot(departureTime: '15:00', arrivalTime: '16:15', fixedPrice: 90003, status: 'active'),
-            TripTimeSlot(departureTime: '18:00', arrivalTime: '19:15', fixedPrice: 90000, status: 'active'),
+            TripTimeSlot(
+                departureTime: '05:00',
+                arrivalTime: '06:15',
+                fixedPrice: 90000,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '07:00',
+                arrivalTime: '08:15',
+                fixedPrice: 90000,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '09:00',
+                arrivalTime: '10:15',
+                fixedPrice: 90004,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '12:00',
+                arrivalTime: '13:15',
+                fixedPrice: 90004,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '15:00',
+                arrivalTime: '16:15',
+                fixedPrice: 90003,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '18:00',
+                arrivalTime: '19:15',
+                fixedPrice: 90000,
+                status: 'active'),
           ],
         ),
         TripConfig(
@@ -75,11 +107,31 @@ class ApiService {
           destination: 'Tam Kỳ',
           status: 'active',
           timeSlots: [
-            TripTimeSlot(departureTime: '06:00', arrivalTime: '07:15', fixedPrice: 90000, status: 'active'),
-            TripTimeSlot(departureTime: '08:00', arrivalTime: '09:15', fixedPrice: 90000, status: 'active'),
-            TripTimeSlot(departureTime: '10:00', arrivalTime: '11:15', fixedPrice: 90000, status: 'active'),
-            TripTimeSlot(departureTime: '14:00', arrivalTime: '15:15', fixedPrice: 89998, status: 'active'),
-            TripTimeSlot(departureTime: '17:00', arrivalTime: '18:15', fixedPrice: 90000, status: 'active'),
+            TripTimeSlot(
+                departureTime: '06:00',
+                arrivalTime: '07:15',
+                fixedPrice: 90000,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '08:00',
+                arrivalTime: '09:15',
+                fixedPrice: 90000,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '10:00',
+                arrivalTime: '11:15',
+                fixedPrice: 90000,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '14:00',
+                arrivalTime: '15:15',
+                fixedPrice: 89998,
+                status: 'active'),
+            TripTimeSlot(
+                departureTime: '17:00',
+                arrivalTime: '18:15',
+                fixedPrice: 90000,
+                status: 'active'),
           ],
         )
       ];
@@ -89,11 +141,13 @@ class ApiService {
   /// Submits a booking request
   static Future<TripRequest> createTripRequest(TripRequest request) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/trip-requests'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(request.toJson()),
-      ).timeout(const Duration(seconds: 4));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/trip-requests'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(request.toJson()),
+          )
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -118,7 +172,8 @@ class ApiService {
         serviceType: request.serviceType,
         createdByType: request.createdByType,
         appliedFixedPrice: request.appliedFixedPrice,
-        status: 'assigned', // Make it auto-assigned to show driver details in timeline
+        status:
+            'assigned', // Make it auto-assigned to show driver details in timeline
         matchedTripConfigId: request.matchedTripConfigId,
         assignedDriverId: '69e04a1ae48cafd270579027',
         assignedDriverName: 'Nguyễn Văn Hùng',
@@ -130,11 +185,14 @@ class ApiService {
   }
 
   /// Fetches a customer's history of trip requests
-  static Future<List<TripRequest>> fetchCustomerTrips(String phoneNumber) async {
+  static Future<List<TripRequest>> fetchCustomerTrips(
+      String phoneNumber) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/customers/$phoneNumber/trip-requests'),
-      ).timeout(const Duration(seconds: 4));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/customers/$phoneNumber/trip-requests'),
+          )
+          .timeout(const Duration(seconds: 4));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -155,7 +213,8 @@ class ApiService {
           requestedSeatCount: 1,
           origin: 'Tam Kỳ',
           destination: 'Đà Nẵng',
-          requestedDepartureTime: DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+          requestedDepartureTime:
+              DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
           source: 'app',
           bookingSource: 'web',
           serviceType: 'xe-ghep',

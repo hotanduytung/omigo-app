@@ -13,6 +13,10 @@ class AppState extends ChangeNotifier {
   bool _isLoading = false;
   int _selectedTabIndex = 0;
 
+  String? _prefillPickup;
+  String? _prefillDropoff;
+  String? _prefillServiceType;
+
   // Coordinate map for simulation
   static const Map<String, List<double>> _coordsMap = {
     'Tam Kỳ': [15.5736, 108.4740],
@@ -37,10 +41,28 @@ class AppState extends ChangeNotifier {
   bool get isLoading => _isLoading;
   int get selectedTabIndex => _selectedTabIndex;
 
+  String? get prefillPickup => _prefillPickup;
+  String? get prefillDropoff => _prefillDropoff;
+  String? get prefillServiceType => _prefillServiceType;
+
   double get simProgress => _simProgress;
   double get driverLat => _driverLat;
   double get driverLng => _driverLng;
   String get simStatusText => _simStatusText;
+
+  void setPrefillBooking(String pickup, String dropoff, String serviceType) {
+    _prefillPickup = pickup;
+    _prefillDropoff = dropoff;
+    _prefillServiceType = serviceType;
+    notifyListeners();
+  }
+
+  void clearPrefillBooking() {
+    _prefillPickup = null;
+    _prefillDropoff = null;
+    _prefillServiceType = null;
+    notifyListeners();
+  }
 
   void setSelectedTabIndex(int index) {
     _selectedTabIndex = index;
@@ -53,20 +75,23 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Auto-login mock customer credentials if empty for seamless testing
     var phone = prefs.getString('customer_phone');
     var name = prefs.getString('customer_name');
-    if (phone == null || name == null) {
+    var email = prefs.getString('customer_email');
+    if (phone == null || name == null || email == null) {
       phone = '0901234567';
       name = 'Văn Định';
+      email = 'vandinh@gmail.com';
       await prefs.setString('customer_phone', phone);
       await prefs.setString('customer_name', name);
+      await prefs.setString('customer_email', email);
     }
 
-    _currentCustomer = Customer(name: name, phoneNumber: phone);
+    _currentCustomer = Customer(name: name, phoneNumber: phone, email: email);
     debugPrint("AppState: Stored Customer Phone: $phone, Name: $name");
-    
+
     try {
       final trips = await ApiService.fetchCustomerTrips(phone);
       for (final t in trips) {
@@ -110,34 +135,43 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String phoneNumber, String name) async {
+  Future<void> login(String phoneNumber, String name,
+      {String email = ''}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final customer = await ApiService.loginCustomer(phoneNumber, name: name);
+      final customer =
+          await ApiService.loginCustomer(phoneNumber, name: name, email: email);
       _currentCustomer = customer;
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('customer_phone', customer.phoneNumber);
       await prefs.setString('customer_name', customer.name);
+      await prefs.setString('customer_email', customer.email);
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateProfile(String name) async {
+  Future<void> updateProfile(
+      {required String name,
+      required String phoneNumber,
+      required String email}) async {
     if (_currentCustomer == null) return;
     _isLoading = true;
     notifyListeners();
     try {
-      final updated = Customer(name: name, phoneNumber: _currentCustomer!.phoneNumber);
+      final updated =
+          Customer(name: name, phoneNumber: phoneNumber, email: email);
       _currentCustomer = updated;
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('customer_name', name);
+      await prefs.setString('customer_phone', phoneNumber);
+      await prefs.setString('customer_email', email);
 
-      await ApiService.loginCustomer(_currentCustomer!.phoneNumber, name: name);
+      await ApiService.loginCustomer(phoneNumber, name: name, email: email);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -151,6 +185,7 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('customer_phone');
     await prefs.remove('customer_name');
+    await prefs.remove('customer_email');
     notifyListeners();
   }
 
@@ -201,7 +236,8 @@ class AppState extends ChangeNotifier {
     _pollTimer = Timer.periodic(const Duration(seconds: 8), (_) async {
       if (_activeTrip == null || _activeTrip!.id == null) return;
       try {
-        final list = await ApiService.fetchCustomerTrips(_activeTrip!.phoneNumber);
+        final list =
+            await ApiService.fetchCustomerTrips(_activeTrip!.phoneNumber);
         final found = list.firstWhere((t) => t.id == _activeTrip!.id,
             orElse: () => _activeTrip!);
         if (found.status != _activeTrip!.status) {
@@ -238,7 +274,7 @@ class AppState extends ChangeNotifier {
           _simStatusText = l == 'vi'
               ? 'Tài xế đã đến điểm đón. Hãy chuẩn bị lên xe!'
               : 'Driver has arrived. Please meet them now!';
-          
+
           if (_simProgress >= 0.40) {
             _activeTrip = currentTrip.copyWith(status: 'on_trip');
           }
@@ -260,7 +296,7 @@ class AppState extends ChangeNotifier {
           _simStatusText = l == 'vi'
               ? 'Bạn đã tới điểm đến an toàn!'
               : 'Arrived safely at destination!';
-          
+
           if (_simProgress >= 1.0) {
             _activeTrip = currentTrip.copyWith(status: 'completed');
           }

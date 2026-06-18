@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/customer.dart';
 import '../services/app_state.dart';
 import '../theme/app_theme.dart';
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -70,6 +72,17 @@ class SettingsScreen extends StatelessWidget {
                               color: AppColors.steel_(isDark),
                             ),
                           ),
+                          if (customer.email.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              customer.email,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                color: AppColors.stone_(isDark),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -89,7 +102,9 @@ class SettingsScreen extends StatelessWidget {
                           color: AppColors.brandGreen,
                         ),
                         onPressed: () => _showEditProfileDialog(
-                          context, state, customer.name,
+                          context,
+                          state,
+                          customer,
                         ),
                       ),
                     ),
@@ -100,7 +115,8 @@ class SettingsScreen extends StatelessWidget {
             ],
 
             // ── Section: Personalization ─────────────────────────────────────
-            sectionLabel(lang == 'vi' ? 'Cá nhân hóa' : 'Personalization', isDark),
+            sectionLabel(
+                lang == 'vi' ? 'Cá nhân hóa' : 'Personalization', isDark),
             const SizedBox(height: AppSpacing.xs),
 
             Container(
@@ -163,7 +179,8 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
 
             // ── Section: Omigo Info ──────────────────────────────────────────
-            sectionLabel(lang == 'vi' ? 'Thông tin Omigo' : 'Omigo Info', isDark),
+            sectionLabel(
+                lang == 'vi' ? 'Thông tin Omigo' : 'Omigo Info', isDark),
             const SizedBox(height: AppSpacing.xs),
 
             Container(
@@ -253,7 +270,7 @@ class SettingsScreen extends StatelessWidget {
             // ── App attribution footer ───────────────────────────────────────
             Center(
               child: Text(
-                'Omigo © 2026 · Powered by Taxi Loyal',
+                'Omigo © 2026',
                 style: AppText.micro.copyWith(color: AppColors.stone_(isDark)),
               ),
             ),
@@ -277,7 +294,8 @@ class SettingsScreen extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppRadius.lg),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm,
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
         child: Row(
           children: [
@@ -306,13 +324,15 @@ class SettingsScreen extends StatelessWidget {
         ),
         title: Text(
           lang == 'vi' ? 'Đăng xuất' : 'Log Out',
-          style: AppText.heading5.copyWith(color: AppColors.ink_(state.isDarkTheme)),
+          style: AppText.heading5
+              .copyWith(color: AppColors.ink_(state.isDarkTheme)),
         ),
         content: Text(
           lang == 'vi'
               ? 'Bạn có chắc muốn đăng xuất khỏi tài khoản Omigo?'
               : 'Are you sure you want to log out?',
-          style: AppText.bodySm.copyWith(color: AppColors.steel_(state.isDarkTheme)),
+          style: AppText.bodySm
+              .copyWith(color: AppColors.steel_(state.isDarkTheme)),
         ),
         actions: [
           TextButton(
@@ -338,73 +358,13 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showEditProfileDialog(
-    BuildContext context, AppState state, String currentName,
+    BuildContext context,
+    AppState state,
+    Customer customer,
   ) {
-    final controller = TextEditingController(text: currentName);
-    final lang = state.language;
-    final isDark = state.isDarkTheme;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.card_(isDark),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-        ),
-        title: Text(
-          lang == 'vi' ? 'Chỉnh sửa họ tên' : 'Edit Full Name',
-          style: AppText.heading5.copyWith(color: AppColors.ink_(isDark)),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              lang == 'vi' ? 'Họ và tên của bạn:' : 'Your full name:',
-              style: AppText.caption.copyWith(color: AppColors.steel_(isDark)),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              style: AppText.bodySm.copyWith(color: AppColors.ink_(isDark)),
-              decoration: InputDecoration(
-                hintText: lang == 'vi' ? 'Nhập họ tên mới...' : 'Enter new name...',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              lang == 'vi' ? 'Hủy' : 'Cancel',
-              style: AppText.bodySmMedium.copyWith(color: AppColors.steel),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newName = controller.text.trim();
-              if (newName.isNotEmpty) {
-                Navigator.pop(ctx);
-                await state.updateProfile(newName);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      lang == 'vi'
-                          ? 'Đã cập nhật họ tên thành công!'
-                          : 'Profile updated successfully!',
-                    ),
-                    backgroundColor: AppColors.brandGreen,
-                  ),
-                );
-              }
-            },
-            child: Text(
-              lang == 'vi' ? 'Lưu' : 'Save',
-              style: AppText.bodySmMedium.copyWith(color: AppColors.brandGreen),
-            ),
-          ),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(customer: customer),
       ),
     );
   }
