@@ -4050,37 +4050,27 @@ class _BookingScreenState extends State<BookingScreen>
           ],
           const SizedBox(height: 12),
 
-          // Payment Option Selector Pill (Behance Mockup style)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: AppColors.hairline_(isDark)),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.payment_rounded,
-                  color: AppColors.brandGreen,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    lang == 'vi' ? 'Tiền mặt / Ví điện tử' : 'Cash / E-Wallet',
-                    style: AppText.captionBold.copyWith(
-                      color: AppColors.ink_(isDark),
-                    ),
-                  ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_right_rounded,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 13,
+                color: AppColors.steel_(isDark),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                lang == 'vi'
+                    ? 'Thanh toán tiền cho tài xế khi xuống xe'
+                    : 'Pay the driver upon arrival',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
                   color: AppColors.steel_(isDark),
-                  size: 18,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
 
