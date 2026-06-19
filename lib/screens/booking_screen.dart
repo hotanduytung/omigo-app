@@ -3923,25 +3923,20 @@ class _BookingScreenState extends State<BookingScreen>
 
           // Options Header Label
           Text(
-            lang == 'vi' ? 'CHỌN LOẠI DỊCH VỤ' : 'CHOOSE VEHICLE CLASS',
+            lang == 'vi' ? 'DỊCH VỤ ĐÃ CHỌN' : 'SELECTED SERVICE',
             style: AppText.microUppercase.copyWith(
               color: AppColors.steel_(isDark),
             ),
           ),
           const SizedBox(height: 8),
 
-          // Option Card 1: Standard
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedVehicleClass = 0;
-              });
-            },
-            child: Container(
+          // Option Card
+          if (_selectedVehicleClass == 0) ...[
+            Container(
               padding: const EdgeInsets.all(12),
               decoration: cardDecoration(
                 isDark,
-                featured: _selectedVehicleClass == 0,
+                featured: true,
               ),
               child: Row(
                 children: [
@@ -3994,21 +3989,12 @@ class _BookingScreenState extends State<BookingScreen>
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-
-          // Option Card 2: Premium
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedVehicleClass = 1;
-              });
-            },
-            child: Container(
+          ] else ...[
+            Container(
               padding: const EdgeInsets.all(12),
               decoration: cardDecoration(
                 isDark,
-                featured: _selectedVehicleClass == 1,
+                featured: true,
               ),
               child: Row(
                 children: [
@@ -4061,7 +4047,7 @@ class _BookingScreenState extends State<BookingScreen>
                 ],
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 12),
 
           // Payment Option Selector Pill (Behance Mockup style)
