@@ -506,7 +506,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               const SizedBox(height: AppSpacing.xl),
             ],
 
-            // ── Rate & Tip — only for completed ───────────────────────────
+            // ── Rate — only for completed ──────────────────────────────────
             if (isCompleted) ...[
               GestureDetector(
                 onTap: () => _showRatingSheet(state),
@@ -530,8 +530,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       Expanded(
                         child: Text(
                           lang == 'vi'
-                              ? 'Đánh giá & Típ tài xế'
-                              : 'Rate & Tip Driver',
+                              ? 'Đánh giá tài xế'
+                              : 'Rate Driver',
                           style: AppText.bodySmMedium.copyWith(
                             color: AppColors.brandGreen,
                           ),
