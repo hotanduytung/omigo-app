@@ -4178,6 +4178,18 @@ class _BookingScreenState extends State<BookingScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Center(
+              child: Text(
+                stepText,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.brandGreenDeep,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             _bookingStep == 1
                 ? SizedBox(
                     width: double.infinity,
@@ -4330,18 +4342,6 @@ class _BookingScreenState extends State<BookingScreen>
                       ),
                     ],
                   ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                stepText,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.brandGreenDeep,
-                ),
-              ),
-            ),
           ],
         ),
       ),
